@@ -1,15 +1,16 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { URL } from "../utils/config";
 
-const Login = ({ setUser }) => {
+const Login = () => {
   const [email, setEmail] = useState();
   const [password, setPassword] = useState();
   const navigate = useNavigate();
   const sendLogin = async (e) => {
     e.preventDefault();
     const resp = await axios.post(
-      "https://microhubbackend.microhubltd.com.au/api/v1/users/signin",
+      `${URL}api/v1/users/signin`,
       {
         email,
         password,
@@ -18,7 +19,6 @@ const Login = ({ setUser }) => {
     );
     if (resp.status) {
       console.log(resp.data.data);
-      setUser(resp.data.data);
       console.log(resp.status);
       navigate("/");
     }

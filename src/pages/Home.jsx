@@ -1,14 +1,24 @@
 import io from "socket.io-client";
+import axios from "axios";
 import { useEffect, useState } from "react";
+import { URL } from "../utils/config";
 
-const socket = io("https://microhubbackend.microhubltd.com.au/");
+const socket = io(URL);
 
 const Home = () => {
-  // const [user, setUser] = useState({});
+  const room = "niyozbek";
   const [isConnected, setIsConnected] = useState(socket.connected);
   const [message, setMessage] = useState("");
-  const [messages, sendMessages] = useState([]);
+  const [messages, setMessages] = useState([]);
+
   useEffect(() => {
+    const getMessages = async () => {
+      const resp = await axios.get(`${URL}api/v1/messages/${room}`);
+      if (resp.data?.isOk) {
+        setMessages(resp.data?.data);
+      }
+    };
+    getMessages();
     socket.on("connection", () => {
       setIsConnected(true);
       console.log("user connected");
@@ -43,6 +53,9 @@ const Home = () => {
       <h1>Username: Niyozbek</h1>
       <div>
         <p>Connected: {"" + isConnected}</p>
+        <div className="messages">
+          <div className="message">Nma gap uzi</div>
+        </div>
         <input
           type="text"
           placeholder="send a message"
