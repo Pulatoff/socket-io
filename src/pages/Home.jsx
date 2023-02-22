@@ -13,20 +13,26 @@ const Home = () => {
 
   useEffect(() => {
     const getMessages = async () => {
-      const resp = await axios.get(`${URL}api/v1/messages/${room}`);
+      const resp = await axios.get(`${URL}api/v1/messages/${room}`, {
+        withCredentials: true,
+      });
+
       if (resp.data?.isOk) {
-        setMessages(resp.data?.data);
+        setMessages(resp.data?.data.messages);
       }
     };
     getMessages();
-    socket.on("connection", () => {
+    socket.on("connect", () => {
       setIsConnected(true);
       console.log("user connected");
-      socket.emit("join", "asasdasdaffasf");
+      socket.emit("join", room);
+
+      socket.on("newMessages", (messages) => {
+        console.log(messages);
+        setMessages(messages);
+      });
     });
-    socket.on("messages", (messages) => {
-      console.log(messages);
-    });
+
     socket.on("disconnect", () => {
       setIsConnected(false);
     });
@@ -37,15 +43,30 @@ const Home = () => {
       socket.off("messages");
     };
   }, []);
-  const sendMessage = (e) => {
+  const sendMessage = async (e) => {
     e.preventDefault();
-    socket.emit("message", {
-      room: "asasdasdaffasf",
+    const body = {
+      room: room,
       message,
       consumerId: 1,
       nutritionistId: 3,
-      send_side: "nutritionist",
+      send_side: "consumer",
+    };
+    const resp = await axios.post(`${URL}api/v1/messages/${room}`, body, {
+      withCredentials: true,
     });
+    if (resp.data.isOk) {
+      messages.push(body);
+    }
+    const respn = await axios.get(`${URL}api/v1/messages/${room}`, {
+      withCredentials: true,
+    });
+
+    if (respn.data?.isOk) {
+      setMessages(respn.data?.data.messages);
+      setMessage("");
+      socket.emit("messages", room);
+    }
   };
 
   return (
@@ -54,7 +75,13 @@ const Home = () => {
       <div>
         <p>Connected: {"" + isConnected}</p>
         <div className="messages">
-          <div className="message">Nma gap uzi</div>
+          {messages.map((val) => {
+            return (
+              <div className="message" key={val.id}>
+                {val.message}
+              </div>
+            );
+          })}
         </div>
         <input
           type="text"
